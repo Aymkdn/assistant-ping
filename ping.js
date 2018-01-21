@@ -9,6 +9,7 @@ var AssistantPing = function(configuration) {
   // par exemple configuration.key si on a `{ "key": "XXX" }` dans le fichier configuration.json
   // exemple: this.key = configuration.key;
   this.timeout=-1;
+  this.session = ping.createSession();
 }
 
 /**
@@ -33,9 +34,8 @@ AssistantPing.prototype.init = function(plugins) {
 AssistantPing.prototype.ping = function(status, ip) {
   var _this=this;
   return new Promise(function(prom_res) {
-    var session = ping.createSession();
     // on attend que le téléphone ne soit plus là
-    session.pingHost(ip, function (error, target) {
+    _this.session.pingHost(ip, function (error, target) {
       if (error) { // machine éteinte
         if (status==="off") {
           console.log("[assistant-ping] La machine "+target+" est éteinte.");
