@@ -44,7 +44,7 @@ AssistantPing.prototype.ping = function(status, ip) {
           console.log("[assistant-ping] On attend que la machine "+target+" soit allumée.");
           // on retente dans 30 secondes
           _this.timeout = setTimeout(function() {
-             _this.ping(status, ip).then(function() { console.log("ok"); prom_res() })
+             _this.ping(status, ip).then(function() { prom_res() })
           }, 5000)
         }
       } else {
