@@ -8,6 +8,7 @@ var ping = require("net-ping");
 var AssistantPing = function(configuration) {
   // par exemple configuration.key si on a `{ "key": "XXX" }` dans le fichier configuration.json
   // exemple: this.key = configuration.key;
+  this.timeout=-1;
 }
 
 /**
@@ -42,7 +43,7 @@ AssistantPing.prototype.ping = function(status, ip) {
         } else {
           console.log("[assistant-ping] On attend que la machine "+target+" soit allumée.");
           // on retente dans 30 secondes
-          setTimeout(function() {
+          _this.timeout = setTimeout(function() {
              _this.ping(status, ip).then(function() { console.log("ok"); prom_res() })
           }, 5000)
         }
@@ -54,7 +55,7 @@ AssistantPing.prototype.ping = function(status, ip) {
         else {
           console.log("[assistant-ping] On attend que la machine "+target+" soit éteinte.");
           // on retente dans 30 secondes
-          setTimeout(function() {
+          _this.timeout = setTimeout(function() {
              _this.ping(status, ip).then(function() { prom_res() })
           }, 5000)
         }
@@ -71,7 +72,14 @@ AssistantPing.prototype.ping = function(status, ip) {
 AssistantPing.prototype.action = function(commande) {
   var _this=this;
   commande = commande.split(" ");
-  return _this.ping(commande[0], commande[1]);
+  if (commande[0] === "cancel" && _this.timeout!==-1) {
+    clearTimeout(_this.timeout);
+    _this.timeout=-1;
+    console.log("[assistant-ping] Ping annulé.");
+    return Promise.resolve();
+  } else {
+    return _this.ping(commande[0], commande[1]);
+  }
 };
 
 /**
