@@ -7,8 +7,6 @@
   "repository": "https://github.com/Aymkdn/assistant-ping/",
   "license": "MIT",
   "dependencies": {
-    "net-ping": "^1.2.1",
-    "request": "^2.83.0",
-    "request-promise-native": "^1.0.5"
+    "net-ping": "^1.2.1"
   }
 }
