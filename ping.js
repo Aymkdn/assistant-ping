@@ -36,21 +36,26 @@ AssistantPing.prototype.ping = function(status, ip) {
     // on attend que le téléphone ne soit plus là
     session.pingHost(ip, function (error, target) {
       if (error) { // machine éteinte
-        console.log (target + ": " + error.toString ());
-        if (status==="off") prom_res();
-        else {
+        if (status==="off") {
+          console.log("[assistant-ping] La machine "+target+" est éteinte.");
+          prom_res();
+        } else {
+          console.log("[assistant-ping] On attend que la machine "+target+" soit allumée.");
           // on retente dans 30 secondes
           setTimeout(function() {
-            return _this.ping(status, ip).then(function() { prom_res() })
+             _this.ping(status, ip).then(function() { console.log("ok"); prom_res() })
           }, 5000)
         }
       } else {
-        console.log (target + ": Alive");
-        if (status==="on") prom_res();
+        if (status==="on") {
+          console.log("[assistant-ping] La machine "+target+" est allumée.");
+          prom_res();
+        }
         else {
+          console.log("[assistant-ping] On attend que la machine "+target+" soit éteinte.");
           // on retente dans 30 secondes
           setTimeout(function() {
-            return _this.ping(status, ip).then(function() { prom_res() })
+             _this.ping(status, ip).then(function() { prom_res() })
           }, 5000)
         }
       }
@@ -65,10 +70,8 @@ AssistantPing.prototype.ping = function(status, ip) {
  */
 AssistantPing.prototype.action = function(commande) {
   var _this=this;
-  return new Promise(function(prom_res) {
-    commande = commande.split(" ");
-    return _this.ping(commande[0], commande[1]);
-  })
+  commande = commande.split(" ");
+  return _this.ping(commande[0], commande[1]);
 };
 
 /**
