@@ -1,6 +1,6 @@
 {
   "name": "assistant-ping",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Ping une IP du réseau pour détecter le changement de statut",
   "author": "aymkdn",
   "main": "ping.js",

@@ -10,6 +10,7 @@ var AssistantPing = function(configuration) {
   // exemple: this.key = configuration.key;
   this.timeout=-1;
   this.session = ping.createSession();
+  this.status = new Map(); // IP => [ ON or OFF ]
 }
 
 /**
@@ -33,15 +34,24 @@ AssistantPing.prototype.init = function(plugins) {
  */
 AssistantPing.prototype.ping = function(status, ip) {
   var _this=this;
+  var prev = _this.status.get(ip);
+  if (!prev) {
+    prev=[];
+    _this.status.set(ip, prev)
+  }
   return new Promise(function(prom_res) {
-    // on attend que le téléphone ne soit plus là
-    _this.session.pingHost(ip, function (error, target) {
+    // on attend que l'IP ne soit plus disponible
+    _this.session.pingHost(ip, function (error, ip) {
+      prev.push(status);
+      console.log("status = ",status)
       if (error) { // machine éteinte
-        if (status==="off") {
-          console.log("[assistant-ping] La machine "+target+" est éteinte.");
+        // il faut au moins 3 échecs pour considérer que la machine est éteinte
+        if (prev.filter(function(v) { return v==="off" }).length >= 3 && status==="off") {
+          _this.status.delete(ip);
+          console.log("[assistant-ping] La machine "+ip+" est éteinte.");
           prom_res();
         } else {
-          console.log("[assistant-ping] On attend que la machine "+target+" soit allumée.");
+          console.log("[assistant-ping] On attend que la machine "+ip+" soit allumée.");
           // on retente dans 30 secondes
           _this.timeout = setTimeout(function() {
              _this.ping(status, ip).then(function() { prom_res() })
@@ -49,11 +59,12 @@ AssistantPing.prototype.ping = function(status, ip) {
         }
       } else {
         if (status==="on") {
-          console.log("[assistant-ping] La machine "+target+" est allumée.");
+          _this.status.delete(ip);
+          console.log("[assistant-ping] La machine "+ip+" est allumée.");
           prom_res();
         }
         else {
-          console.log("[assistant-ping] On attend que la machine "+target+" soit éteinte.");
+          console.log("[assistant-ping] On attend que la machine "+ip+" soit éteinte.");
           // on retente dans 30 secondes
           _this.timeout = setTimeout(function() {
              _this.ping(status, ip).then(function() { prom_res() })
