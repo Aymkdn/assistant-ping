@@ -34,6 +34,7 @@ AssistantPing.prototype.init = function(plugins) {
  */
 AssistantPing.prototype.ping = function(status, ip) {
   var _this=this;
+  var delay = 10000; // délai entre chaque ping
   var prev = _this.status.get(ip);
   if (!prev) {
     prev=[];
@@ -41,34 +42,34 @@ AssistantPing.prototype.ping = function(status, ip) {
   }
   return new Promise(function(prom_res) {
     // on attend que l'IP ne soit plus disponible
-    _this.session.pingHost(ip, function (error, ip) {
-      prev.push(status);
-      console.log("status = ",status)
+    _this.session.pingHost(ip, function (error) {
       if (error) { // machine éteinte
+        prev.push("off");
         // il faut au moins 3 échecs pour considérer que la machine est éteinte
         if (prev.filter(function(v) { return v==="off" }).length >= 3 && status==="off") {
           _this.status.delete(ip);
           console.log("[assistant-ping] La machine "+ip+" est éteinte.");
           prom_res();
         } else {
-          console.log("[assistant-ping] On attend que la machine "+ip+" soit allumée.");
-          // on retente dans 30 secondes
+          console.log("[assistant-ping] On attend que la machine "+ip+" soit éteinte.");
+          // on retente dans 5 secondes
           _this.timeout = setTimeout(function() {
              _this.ping(status, ip).then(function() { prom_res() })
-          }, 5000)
+          }, delay)
         }
       } else {
+        prev.push("on");
         if (status==="on") {
           _this.status.delete(ip);
           console.log("[assistant-ping] La machine "+ip+" est allumée.");
           prom_res();
         }
         else {
-          console.log("[assistant-ping] On attend que la machine "+ip+" soit éteinte.");
-          // on retente dans 30 secondes
+          console.log("[assistant-ping] On attend que la machine "+ip+" soit allumée.");
+          // on retente dans 5 secondes
           _this.timeout = setTimeout(function() {
              _this.ping(status, ip).then(function() { prom_res() })
-          }, 5000)
+          }, delay)
         }
       }
     });
